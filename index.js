@@ -713,3 +713,380 @@ export class BinaryHeap {
 		}
 	}
 }
+/**
+ * A 2D vector class.
+ *
+ * @param {number} X The X coordinate.
+ * @param {number} Y The Y coordinate.
+ */
+export class vec2 {
+	constructor(X, Y) {
+		// Set the X and Y coordinates.
+		this.X = X
+		this.Y = Y
+
+		// Check if the X and Y coordinates are strings.
+		if (typeof X == "string") {
+			this.X = Number(X)
+		}
+		if (typeof Y == "string") {
+			this.Y = Number(Y)
+		}
+	}
+
+	/**
+	 * Compares the position of this vector to another vector.
+	 *
+	 * @param {vec2} Pos The other vector.
+	 * @returns {boolean} Whether the positions are the same.
+	 */
+	ComparPos(Pos) {
+		// Convert the vectors to strings.
+		const ThisStr = this.toString()
+		const PosStr = Pos.toString()
+
+		// Compare the strings.
+		return ThisStr == PosStr
+	}
+
+	/**
+	 * Subtracts another vector from this vector.
+	 *
+	 * @param {vec2} Pos The other vector.
+	 * @returns {vec2} The difference vector.
+	 */
+	Sub(Pos) {
+		// Create a new vector with the difference.
+		const NewVec = new vec2(this.X - Pos.X, this.Y - Pos.Y)
+
+		// Return the new vector.
+		return NewVec
+	}
+
+	/**
+	 * Adds another vector to this vector.
+	 *
+	 * @param {vec2} Pos The other vector.
+	 * @returns {vec2} The sum vector.
+	 */
+	Add(Pos) {
+		// Create a new vector with the sum.
+		const NewVec = new vec2(this.X + Pos.X, this.Y + Pos.Y)
+
+		// Return the new vector.
+		return NewVec
+	}
+
+	/**
+	 * Converts the vector to a string.
+	 *
+	 * @returns {string} The string representation of the vector.
+	 */
+	toString() {
+		// Return the vector as a string.
+		return `[${this.X},${this.Y}]`
+	}
+
+	/**
+	 * Calculates the distance between this vector and another vector.
+	 *
+	 * @param {vec2} Pos The other vector.
+	 * @returns {number} The distance.
+	 */
+	Distance(Pos) {
+		// Calculate the X and Y distances.
+		this.DistX = Math.abs(this.X - Pos.X)
+		this.DistY = Math.abs(this.Y - Pos.Y)
+
+		// Return the greater distance.
+		if (this.DistX > this.DistY) {
+			return 14 * this.DistY + 10 * (this.DistX - this.DistY)
+		}
+		return 14 * this.DistX + 10 * (this.DistY - this.DistX)
+	}
+}
+/**
+ * A class representing a node in a maze.
+ *
+ * @class Node
+ * @param {Object} Pos The position of the node.
+ * @param {number} Size The size of the node.
+ * @param {HTMLCanvasElement} CanavsElement The canvas element that the node is drawn on.
+ */
+class Node {
+	/**
+	 * Constructs a new `Node` object.
+	 *
+	 * @param {Object} Pos The position of the node.
+	 * @param {number} Size The size of the node.
+	 * @param {HTMLCanvasElement} CanavsElement The canvas element that the node is drawn on.
+	 */
+	constructor(Pos, Size, CanavsElement) {
+		/**
+		 * The position of the node.
+		 *
+		 * @type {Object}
+		 */
+		this.Pos = Pos
+
+		/**
+		 * The node that this node came from.
+		 *
+		 * @type {Node}
+		 */
+		this.CameFrom = null
+
+		/**
+		 * The walls of the node.
+		 *
+		 * @type {Object}
+		 * @property {boolean} TopWall Whether the top wall is present.
+		 * @property {boolean} RightWall Whether the right wall is present.
+		 * @property {boolean} BottomWall Whether the bottom wall is present.
+		 * @property {boolean} LeftWall Whether the left wall is present.
+		 */
+		this.Walls = {
+			TopWall: true,
+			RightWall: true,
+			BottomWall: true,
+			LeftWall: true,
+		}
+
+		/**
+		 * Whether the node has been visited by the maze generation algorithm.
+		 *
+		 * @type {boolean}
+		 */
+		this.MazeVisited = false
+
+		/**
+		 * The canvas element that the node is drawn on.
+		 *
+		 * @type {HTMLCanvasElement}
+		 */
+		this.CanavsElement = CanavsElement
+
+		/**
+		 * The 2D context of the canvas element that the node is drawn on.
+		 *
+		 * @type {CanvasRenderingContext2D}
+		 */
+		this.Canavs = this.CanavsElement ? this.CanavsElement.getContext("2d") : null
+
+		/**
+		 * A function that draws a wall of the node.
+		 *
+		 * @type {Function}
+		 * @param {string} Wall The name of the wall to draw.
+		 */
+		this.DrawWall = {
+			TopWall: this.DrawTopWall,
+			RightWall: this.DrawRightWall,
+			BottomWall: this.DrawBottomWall,
+			LeftWall: this.DrawLeftWall,
+		}
+
+		/**
+		 * The size of the node.
+		 *
+		 * @type {number}
+		 */
+		this.Size = Size
+
+		//Pathfinding
+
+		/**
+		 * Whether the node has been visited by the pathfinding algorithm.
+		 *
+		 * @type {boolean}
+		 */
+		this.PathVisited = false
+
+		/**
+		 * Whether the node is closed (i.e., not considered for further expansion by the pathfinding algorithm).
+		 *
+		 * @type {boolean}
+		 */
+		this.Closed = false
+
+		/**
+		 * The node that is the root of the path to this node.
+		 *
+		 * @type {Node}
+		 */
+		this.Root = null
+
+		/**
+		 * The cost from the start node to this node.
+		 *
+		 * @type {number}
+		 */
+		this.G = 0
+
+		/**
+		 * The estimated cost from this node to the end node.
+		 *
+		 * @type {number}
+		 */
+		this.H = 0
+
+		/**
+		 * The total cost from the start node to this node.
+		 *
+		 * @type {number}
+		 */
+		this.F = 0
+		/**
+		 * The color of the node.
+		 *
+		 * @type {string}
+		 */
+		this.Color = "black"
+
+		/**
+		 * The color of the walls of the node.
+		 *
+		 * @type {string}
+		 */
+		this.WallColor = "white"
+
+		/**
+		 * The element that represents the node in the DOM.
+		 *
+		 * @type {HTMLElement}
+		 */
+		this.Element = null
+	}
+
+	/**
+	 * Sets the color of the node.
+	 *
+	 * @param {string} Color The new color of the node.
+	 */
+	SetColor(Color) {
+		// Set the color of the node.
+		this.Color = Color
+
+		// Set the background color of the node's element.
+		this.Element.style.backgroundColor = Color
+	}
+
+	/**
+	 * Draws the top wall of the node.
+	 */
+	DrawTopWall() {
+		// Start a new path.
+		this.Canavs.beginPath()
+
+		// Move to the start of the wall.
+		this.Canavs.moveTo(this.Pos.X * this.Size.X, this.Pos.Y * this.Size.Y)
+
+		// Draw the line to the end of the wall.
+		this.Canavs.lineTo(this.Pos.X * this.Size.X + this.Size.X, this.Pos.Y * this.Size.Y)
+
+		// Stroke the path.
+		this.Canavs.stroke()
+	}
+
+	/**
+	 * Draws the right wall of the node.
+	 */
+	DrawRightWall() {
+		// Start a new path.
+		this.Canavs.beginPath()
+
+		// Move to the start of the wall.
+		this.Canavs.moveTo(this.Pos.X * this.Size.X + this.Size.X, this.Pos.Y * this.Size.Y - this.Size.Y / this.Size.Y)
+
+		// Draw the line to the end of the wall.
+		this.Canavs.lineTo(this.Pos.X * this.Size.X + this.Size.X, this.Pos.Y * this.Size.Y + this.Size.Y)
+
+		// Stroke the path.
+		this.Canavs.stroke()
+	}
+
+	/**
+	 * Draws the bottom wall of the node.
+	 */
+	DrawBottomWall() {
+		// Start a new path.
+		this.Canavs.beginPath()
+
+		// Move to the start of the wall.
+		this.Canavs.moveTo(this.Pos.X * this.Size.X - this.Size.X / this.Size.X, this.Pos.Y * this.Size.Y + this.Size.Y)
+
+		// Draw the line to the end of the wall.
+		this.Canavs.lineTo(this.Pos.X * this.Size.X + this.Size.X + 1, this.Pos.Y * this.Size.Y + this.Size.Y)
+
+		// Stroke the path.
+		this.Canavs.stroke()
+	}
+
+	/**
+	 * Draws the left wall of the node.
+	 */
+	DrawLeftWall() {
+		// Start a new path.
+		this.Canavs.beginPath()
+
+		// Move to the start of the wall.
+		this.Canavs.moveTo(this.Pos.X * this.Size.X - this.Size.X / this.Size.X + 1, this.Pos.Y * this.Size.Y + this.Size.Y)
+
+		// Draw the line to the end of the wall.
+		this.Canavs.lineTo(this.Pos.X * this.Size.X - this.Size.X / this.Size.X + 1, this.Pos.Y * this.Size.Y - 1)
+
+		// Stroke the path.
+		this.Canavs.stroke()
+	}
+	/**
+	 * Draws the node.
+	 */
+	Draw() {
+		// Clear the canvas.
+		this.Canavs.clearRect(0, 0, this.Canavs.width, this.Canavs.height)
+
+		// Set the stroke style to the color of the walls.
+		this.Canavs.strokeStyle = this.WallColor
+
+		// Set the fill style to the color of the node.
+		// If the node has been visited by the maze generation algorithm or the pathfinding algorithm, fill it in with a random color.
+		if (this.MazeVisited || this.PathVisited) {
+			// Generate a random color.
+			this.Color = `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`
+			this.Canavs.fillStyle = this.Color
+		} else {
+			this.Canavs.fillStyle = this.Color
+		}
+
+		// Set the line width to 2 pixels.
+		this.Canavs.lineWidth = 2
+
+		// Draw the walls of the node.
+		for (const Index in this.Walls) {
+			if (this.Walls[Index]) this.DrawWall[Index]()
+		}
+
+		// Request the next frame to be rendered.
+		window.requestAnimationFrame(this.Draw)
+	}
+}
+/**
+ * Converts milliseconds to a human-readable time string.
+ *
+ * @param {number} duration The number of milliseconds to convert.
+ * @return {string} The human-readable time string.
+ */
+function msToTime(duration) {
+	// Get the milliseconds, seconds, minutes, and hours.
+	const milliseconds = Math.floor((duration % 1000) / 100)
+	const seconds = Math.floor((duration / 1000) % 60)
+	const minutes = Math.floor((duration / (1000 * 60)) % 60)
+	const hours = Math.floor((duration / (1000 * 60 * 60)) % 24)
+
+	// Pad the seconds and minutes with zeros if necessary.
+	seconds = seconds < 10 ? "0" + seconds : seconds
+	minutes = minutes < 10 ? "0" + minutes : minutes
+
+	// Return the time string.
+	return hours + ":" + minutes + ":" + seconds + "." + milliseconds
+}
