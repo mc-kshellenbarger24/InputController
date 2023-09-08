@@ -4,7 +4,7 @@
  * @param {HTMLElement} Gui The root element of the GUI.
  * @property {Object} Mouse // Mouse data.
  * @property {Object} Keys // Key data
- * @property {Array} Buttons // Onclick Buttons
+ * @property {Array<Object>} Buttons // Onclick Buttons
  * @property {Function} OnMouseUpFunction //Callbacks
  * @property {Function} OnMouseMoveFunction //Callbacks
  * @property {Function} OnKeyDownFunction //Callbacks
@@ -12,7 +12,7 @@
  * @property {Function} OnClickFunction //Callbacks
  */
 
-export default class InputController {
+export class InputController {
 	// Constructor
 
 	constructor(Gui = document) {
@@ -51,7 +51,7 @@ export default class InputController {
 		this.ToggledKeys = {}
 
 		/**
-		 * @type {Array}
+		 * @type {Array<Object>}
 		 * @property {Element} Button // the element to check rather or not its been clicked
 		 * @property {Function} Function // CallBack
 		 * @param {Event} e // Onclick Event
@@ -209,4 +209,101 @@ export default class InputController {
 		}
 		Function(e, this, false)
 	}
+}
+
+/**
+ * Returns whether the specified key is Toggled.
+ * @type {Function}
+ * @param {number} Start Start number of the lerp
+ * @param {number} End End number of the lerp
+ * @param {number} Duration Time it takes to finish the lerp
+ * @param {number} FPS Frames per second that the lerp updates
+ * @default FPS 60
+ * @param {boolean} Reverse rather or not it goes backwords from end to start
+ * @default Reverse false
+ * @param {Function} StartCallBack Called when the lerp starts
+ * @default StartCallBack (Value, ArgsTable) => null
+ * @returns {Object} Args to send to the start, update, and done callbacks
+ * @param {number} StartCallBack.Value The current value of the lerp.
+ * @param {Object} StartCallBack.ArgsTable The arguments table passed to the callback function.
+ * @param {Function} CallBackFunction Called when the lerp is updating
+ * @default CallBackFunction (Value, ArgsTable) => null
+ * @returns {Object} Args to send to the start, update, and done callbacks
+ * @param {number} CallBackFunction.Value The current value of the lerp.
+ * @param {Object} CallBackFunction.ArgsTable The arguments table passed to the callback function.
+ * @param {Function} DoneCallBack Called when the lerp is done and has reached end
+ * @default DoneCallBack (Value, ArgsTable) => null
+ * @returns {Object} Args to send to the start, update, and done callbacks
+ * @param {number} DoneCallBack.Value The current value of the lerp.
+ * @param {Object} DoneCallBack.ArgsTable The arguments table passed to the callback function.
+ * @param {Function} EaseFunction
+ * @param {number} EaseFunction.t time
+ * @default EaseFunction (t) => t
+ *
+ */
+export function LerpAnimate(
+	Start,
+	End,
+	Duration,
+	FPS = 60,
+	Reverse = false,
+	StartCallBack = (Value, ArgsTable) => {
+		return null
+	},
+	CallBackFunction = (Value, ArgsTable) => {
+		return null
+	},
+	DoneCallBack = (Value, ArgsTable) => {
+		return null
+	},
+	EaseFunction = (T) => {
+		return T
+	}
+) {
+	let Value = Start
+	let StartTime = Date.now()
+	let lerp = (start, end, t) => {
+		return start * (1 - t) + end * t
+	}
+	let ArgsTable = [
+		(Name = {
+			Name: "Start",
+			Args: [],
+		}),
+		{
+			Name: "Going",
+			Args: [],
+		},
+		{
+			Name: "Done",
+			Args: [],
+		},
+	]
+	StartArg = StartCallBack(Value, ArgsTable)
+	ArgsTable[0].Args = StartArg
+	if (Reverse) {
+		CheckValue = End
+	} else {
+		CheckValue = Start
+	}
+	let Update = setInterval(function () {
+		let Progress = Date.now() - StartTime
+		if (Progress < Duration || Math.round(Value) == CheckValue) {
+			let Pct = EaseFunction(Progress / Duration)
+			if (Reverse) {
+				Pct = 1 - Pct
+			}
+			Value = lerp(Start, End, Pct)
+			GoingArgs = CallBackFunction(Value, ArgsTable)
+			ArgsTable[1].Args = GoingArgs
+		} else {
+			Value = Math.round(Value)
+			GoingArgs = CallBackFunction(Value, ArgsTable)
+			DoneArgs = DoneCallBack(Value, ArgsTable)
+			ArgsTable[1].Args = GoingArgs
+			ArgsTable[2].Args = DoneArgs
+			clearInterval(Update)
+		}
+	}, 1000 / FPS)
+	return Update
 }
