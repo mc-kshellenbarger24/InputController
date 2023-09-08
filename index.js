@@ -708,10 +708,8 @@ export class BinaryHeap {
 		// Create an empty heap.
 		this.Heap = []
 		var Length = array.length
-		// Iterate over the array.
-		for (var Index = 0; Index < Length; Index++) {
-			// Insert the element at the current index into the heap.
-			this.insert(array[Index])
+		while (Length--) {
+			this.insert(array[Length])
 		}
 	}
 }
