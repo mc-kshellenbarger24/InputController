@@ -813,7 +813,7 @@ export class vec2 {
  * @param {number} Size The size of the node.
  * @param {HTMLCanvasElement} CanavsElement The canvas element that the node is drawn on.
  */
-class Node {
+export class Node {
 	/**
 	 * Constructs a new `Node` object.
 	 *
@@ -1076,7 +1076,7 @@ class Node {
  * @param {number} duration The number of milliseconds to convert.
  * @return {string} The human-readable time string.
  */
-function msToTime(duration) {
+export function msToTime(duration) {
 	// Get the milliseconds, seconds, minutes, and hours.
 	const milliseconds = Math.floor((duration % 1000) / 100)
 	const seconds = Math.floor((duration / 1000) % 60)
