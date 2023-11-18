@@ -3,7 +3,7 @@
  * @class
  * @param {HTMLElement} Gui The root element of the GUI.
  */
-//Test
+
 export class InputController {
 	// Constructor
 
